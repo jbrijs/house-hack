@@ -2,7 +2,7 @@ name: Trigger Apify Scrapers
 
 on:
   schedule:
-    - cron: '0 12,0 * * *'  # 6am and 6pm MT (UTC-6 in winter)
+    - cron: '0 12 * * 1'  # Every Monday at 6am MT (UTC-6 in winter)
   workflow_dispatch:         # allow manual trigger for testing
 
 jobs:

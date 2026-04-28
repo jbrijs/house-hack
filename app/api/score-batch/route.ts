@@ -35,17 +35,34 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const total = totalActive ?? 0
 
   // Find unscored listings
-  let query = supabase
-    .from('listings')
-    .select('id')
-    .eq('status', 'active')
+  let candidatesData: { id: string }[] | null = null
+  let candidatesError: unknown = null
 
   if (scoredIds.length > 0) {
-    query = query.not('id', 'in', `(${scoredIds.map(id => `'${id}'`).join(',')})`)
+    const res = await supabase
+      .from('listings')
+      .select('id')
+      .eq('status', 'active')
+      .not('id', 'in', `(${scoredIds.map(id => `'${id}'`).join(',')})`)
+      .limit(batchSize)
+    candidatesData = res.data as { id: string }[] | null
+    candidatesError = res.error
+  } else {
+    const res = await supabase
+      .from('listings')
+      .select('id')
+      .eq('status', 'active')
+      .limit(batchSize)
+    candidatesData = res.data as { id: string }[] | null
+    candidatesError = res.error
   }
 
-  const { data: candidates } = await query.limit(batchSize)
-  const unscored = candidates ?? []
+  if (candidatesError) {
+    console.error('Unscored query error:', candidatesError)
+    return NextResponse.json({ error: String(candidatesError), scored: 0, remaining: total - scoredIds.length }, { status: 500 })
+  }
+
+  const unscored = candidatesData ?? []
 
   if (unscored.length === 0) {
     return NextResponse.json({ ok: true, scored: 0, remaining: Math.max(0, total - scoredIds.length) })

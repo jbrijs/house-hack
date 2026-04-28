@@ -12,46 +12,54 @@ jobs:
     steps:
       - name: Trigger Zillow for-sale scraper
         run: |
-          curl -s -f -X POST \
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
             "https://api.apify.com/v2/acts/${{ secrets.APIFY_ZILLOW_ACTOR_ID }}/runs" \
             -H "Authorization: Bearer ${{ secrets.APIFY_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "input": {
-                "searchUrls": [
-                  {"url": "https://www.zillow.com/utah-county-ut/"},
-                  {"url": "https://www.zillow.com/salt-lake-county-ut/"}
-                ],
-                "maxItems": 200
-              },
+              "searchUrls": [
+                {"url": "https://www.zillow.com/utah-county-ut/"},
+                {"url": "https://www.zillow.com/salt-lake-county-ut/"}
+              ],
+              "maxItems": 200,
               "webhooks": [{
                 "eventTypes": ["ACTOR.RUN.SUCCEEDED"],
                 "requestUrl": "${{ secrets.INGEST_WEBHOOK_URL }}",
                 "payloadTemplate": "{\"eventData\": {{eventData}}, \"resource\": {{resource}}}",
                 "headersTemplate": "{\"x-ingest-token\": \"${{ secrets.INGEST_TOKEN }}\", \"x-listing-type\": \"for_sale\"}"
               }]
-            }'
+            }')
+          echo "$RESPONSE"
+          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            echo "Error: HTTP $HTTP_STATUS"
+            exit 1
+          fi
           echo "For-sale scraper triggered"
 
       - name: Trigger Zillow rentals scraper
         run: |
-          curl -s -f -X POST \
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
             "https://api.apify.com/v2/acts/${{ secrets.APIFY_ZILLOW_ACTOR_ID }}/runs" \
             -H "Authorization: Bearer ${{ secrets.APIFY_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{
-              "input": {
-                "searchUrls": [
-                  {"url": "https://www.zillow.com/utah-county-ut/rentals/"},
-                  {"url": "https://www.zillow.com/salt-lake-county-ut/rentals/"}
-                ],
-                "maxItems": 300
-              },
+              "searchUrls": [
+                {"url": "https://www.zillow.com/utah-county-ut/rentals/"},
+                {"url": "https://www.zillow.com/salt-lake-county-ut/rentals/"}
+              ],
+              "maxItems": 300,
               "webhooks": [{
                 "eventTypes": ["ACTOR.RUN.SUCCEEDED"],
                 "requestUrl": "${{ secrets.INGEST_WEBHOOK_URL }}",
                 "payloadTemplate": "{\"eventData\": {{eventData}}, \"resource\": {{resource}}}",
                 "headersTemplate": "{\"x-ingest-token\": \"${{ secrets.INGEST_TOKEN }}\", \"x-listing-type\": \"rental\"}"
               }]
-            }'
+            }')
+          echo "$RESPONSE"
+          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            echo "Error: HTTP $HTTP_STATUS"
+            exit 1
+          fi
           echo "Rentals scraper triggered"

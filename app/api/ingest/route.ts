@@ -47,52 +47,51 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const items = await fetchApifyDataset(datasetId)
 
     if (listingType === 'rental') {
+      const now = new Date().toISOString()
+      const rows: Record<string, unknown>[] = []
       for (const raw of items) {
         const normalized = normalizeZillowRental(raw)
         if (!normalized || !normalized.zip || !normalized.rent || !normalized.bedrooms) continue
+        rows.push({
+          source_id: normalized.source_id,
+          address: normalized.address,
+          zip: normalized.zip,
+          city: normalized.city,
+          county: normalized.county,
+          rent: normalized.rent,
+          bedrooms: normalized.bedrooms,
+          bathrooms: normalized.bathrooms,
+          sqft: normalized.sqft,
+          source: normalized.source,
+          last_seen_at: now,
+          is_active: true,
+        })
+      }
 
-        await supabase.from('rent_comps').upsert(
-          {
-            source_id: normalized.source_id,
-            address: normalized.address,
-            zip: normalized.zip,
-            city: normalized.city,
-            county: normalized.county,
-            rent: normalized.rent,
-            bedrooms: normalized.bedrooms,
-            bathrooms: normalized.bathrooms,
-            sqft: normalized.sqft,
-            source: normalized.source,
-            last_seen_at: new Date().toISOString(),
-            is_active: true,
-          },
-          { onConflict: 'source,source_id' }
-        )
-        processed++
+      const BATCH = 100
+      for (let i = 0; i < rows.length; i += BATCH) {
+        const { error } = await supabase
+          .from('rent_comps')
+          .upsert(rows.slice(i, i + BATCH), { onConflict: 'source,source_id', ignoreDuplicates: false })
+        if (error) throw error
+        processed += Math.min(BATCH, rows.length - i)
       }
     } else {
+      const now = new Date().toISOString()
+      const rows: Record<string, unknown>[] = []
       for (const raw of items) {
         const normalized = normalizeZillowListing(raw)
         if (!normalized) continue
+        rows.push({ ...normalized, last_seen_at: now })
+      }
 
-        const { data: existing } = await supabase
+      const BATCH = 100
+      for (let i = 0; i < rows.length; i += BATCH) {
+        const { error } = await supabase
           .from('listings')
-          .select('id, price')
-          .eq('source', normalized.source)
-          .eq('source_id', normalized.source_id)
-          .single()
-
-        await supabase
-          .from('listings')
-          .upsert(
-            {
-              ...normalized,
-              last_seen_at: new Date().toISOString(),
-              ...(!existing ? { first_seen_at: new Date().toISOString() } : {}),
-            },
-            { onConflict: 'source,source_id' }
-          )
-        processed++
+          .upsert(rows.slice(i, i + BATCH), { onConflict: 'source,source_id', ignoreDuplicates: false })
+        if (error) throw error
+        processed += Math.min(BATCH, rows.length - i)
       }
     }
 

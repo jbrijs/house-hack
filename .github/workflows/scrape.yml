@@ -18,12 +18,12 @@ jobs:
       - name: Trigger Zillow for-sale scraper
         run: |
           WEBHOOKS=$(python3 -c "
-          import base64, json
+          import base64, json, os
           w = [{
             'eventTypes': ['ACTOR.RUN.SUCCEEDED'],
-            'requestUrl': '$INGEST_WEBHOOK_URL',
+            'requestUrl': os.environ['INGEST_WEBHOOK_URL'],
             'payloadTemplate': '{\"eventData\": {{eventData}}, \"resource\": {{resource}}}',
-            'headersTemplate': '{\"x-ingest-token\": \"$INGEST_TOKEN\", \"x-listing-type\": \"for_sale\"}'
+            'headersTemplate': '{\"x-ingest-token\": \"' + os.environ['INGEST_TOKEN'] + '\", \"x-listing-type\": \"for_sale\"}'
           }]
           print(base64.b64encode(json.dumps(w).encode()).decode())
           ")
@@ -34,8 +34,8 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "searchUrls": [
-                {"url": "https://www.zillow.com/homes/for_sale/Utah-County-UT_rb/"},
-                {"url": "https://www.zillow.com/homes/for_sale/Salt-Lake-County-UT_rb/"}
+                {"url": "https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-112.3%2C%22east%22%3A-111.15%2C%22south%22%3A39.85%2C%22north%22%3A40.45%7D%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22days%22%7D%2C%22ah%22%3A%7B%22value%22%3Atrue%7D%7D%2C%22isListVisible%22%3Atrue%7D"},
+                {"url": "https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-112.2%2C%22east%22%3A-111.55%2C%22south%22%3A40.4%2C%22north%22%3A40.9%7D%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22days%22%7D%2C%22ah%22%3A%7B%22value%22%3Atrue%7D%7D%2C%22isListVisible%22%3Atrue%7D"}
               ],
               "maxItems": 200
             }')
@@ -49,12 +49,12 @@ jobs:
       - name: Trigger Zillow rentals scraper
         run: |
           WEBHOOKS=$(python3 -c "
-          import base64, json
+          import base64, json, os
           w = [{
             'eventTypes': ['ACTOR.RUN.SUCCEEDED'],
-            'requestUrl': '$INGEST_WEBHOOK_URL',
+            'requestUrl': os.environ['INGEST_WEBHOOK_URL'],
             'payloadTemplate': '{\"eventData\": {{eventData}}, \"resource\": {{resource}}}',
-            'headersTemplate': '{\"x-ingest-token\": \"$INGEST_TOKEN\", \"x-listing-type\": \"rental\"}'
+            'headersTemplate': '{\"x-ingest-token\": \"' + os.environ['INGEST_TOKEN'] + '\", \"x-listing-type\": \"rental\"}'
           }]
           print(base64.b64encode(json.dumps(w).encode()).decode())
           ")
@@ -65,8 +65,8 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "searchUrls": [
-                {"url": "https://www.zillow.com/homes/for_rent/Utah-County-UT_rb/"},
-                {"url": "https://www.zillow.com/homes/for_rent/Salt-Lake-County-UT_rb/"}
+                {"url": "https://www.zillow.com/homes/for_rent/?searchQueryState=%7B%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-112.3%2C%22east%22%3A-111.15%2C%22south%22%3A39.85%2C%22north%22%3A40.45%7D%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22days%22%7D%2C%22isForRent%22%3A%7B%22value%22%3Atrue%7D%7D%2C%22isListVisible%22%3Atrue%7D"},
+                {"url": "https://www.zillow.com/homes/for_rent/?searchQueryState=%7B%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-112.2%2C%22east%22%3A-111.55%2C%22south%22%3A40.4%2C%22north%22%3A40.9%7D%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22days%22%7D%2C%22isForRent%22%3A%7B%22value%22%3Atrue%7D%7D%2C%22isListVisible%22%3Atrue%7D"}
               ],
               "maxItems": 300
             }')

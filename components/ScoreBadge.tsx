@@ -1,15 +1,17 @@
+import { Badge } from '@/components/ui/badge'
+
 type Recommendation = 'BUY' | 'WATCH' | 'PASS'
 
-const styles: Record<Recommendation, string> = {
-  BUY: 'bg-green-100 text-green-800 border-green-200',
-  WATCH: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  PASS: 'bg-gray-100 text-gray-500 border-gray-200',
+const variants: Record<Recommendation, string> = {
+  BUY: 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100',
+  WATCH: 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100',
+  PASS: 'bg-muted text-muted-foreground hover:bg-muted',
 }
 
 export function ScoreBadge({ recommendation, score }: { recommendation: Recommendation; score: number }) {
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${styles[recommendation]}`}>
+    <Badge variant="outline" className={`font-semibold tabular-nums ${variants[recommendation]}`}>
       {recommendation} · {score}
-    </span>
+    </Badge>
   )
 }

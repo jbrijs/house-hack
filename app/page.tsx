@@ -36,14 +36,12 @@ export default function ListingsFeed() {
     const { data } = await query
     let results = (data as ListingWithScore[]) ?? []
 
-    // Client-side filter for recommendation and min score (joined table filters)
     if (filters.recommendation) {
       results = results.filter((l) => l.listing_scores?.recommendation === filters.recommendation)
     }
     if (filters.minScore) {
       results = results.filter((l) => (l.listing_scores?.score ?? 0) >= Number(filters.minScore))
     }
-    // Only show listings that pass the hard filter
     results = results.filter((l) => l.listing_scores?.passes_filter === true)
 
     setListings(results)
@@ -63,15 +61,17 @@ export default function ListingsFeed() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold">Listings</h1>
-        <span className="text-sm text-gray-400">{listings.length} results</span>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-lg font-semibold">Listings</h1>
+        <span className="text-sm text-muted-foreground">
+          {loading ? 'Loading...' : `${listings.length} results`}
+        </span>
       </div>
       <FilterBar filters={filters} onChange={setFilters} />
-      {loading ? (
-        <p className="text-sm text-gray-400">Loading...</p>
-      ) : listings.length === 0 ? (
-        <p className="text-sm text-gray-400">No listings match your filters. Check back after the next scrape run.</p>
+      {!loading && listings.length === 0 ? (
+        <p className="text-sm text-muted-foreground mt-8 text-center">
+          No listings match your filters. Check back after the next scrape run.
+        </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {listings.map((l) => (

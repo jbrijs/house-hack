@@ -1,5 +1,11 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { Inter } from 'next/font/google'
+import { cn } from '@/lib/utils'
+import Link from 'next/link'
+import { Separator } from '@/components/ui/separator'
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
 export const metadata: Metadata = {
   title: 'House Hack Intel',
@@ -8,13 +14,24 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-gray-50 text-gray-900 min-h-screen">
-        <nav className="bg-white border-b border-gray-200 px-6 py-3 flex gap-6 items-center">
-          <span className="font-bold text-gray-900">House Hack Intel</span>
-          <a href="/" className="text-sm text-gray-600 hover:text-gray-900">Listings</a>
-          <a href="/pipeline" className="text-sm text-gray-600 hover:text-gray-900">Pipeline</a>
-        </nav>
+    <html lang="en" className={cn('font-sans', inter.variable)}>
+      <body className={cn('bg-background text-foreground min-h-screen', inter.variable)}>
+        <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+          <div className="max-w-7xl mx-auto px-6 h-12 flex items-center gap-6">
+            <Link href="/" className="font-bold text-sm tracking-tight">
+              House Hack Intel
+            </Link>
+            <Separator orientation="vertical" className="h-4" />
+            <nav className="flex gap-4">
+              <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Listings
+              </Link>
+              <Link href="/pipeline" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Pipeline
+              </Link>
+            </nav>
+          </div>
+        </header>
         <main className="max-w-7xl mx-auto px-6 py-8">{children}</main>
       </body>
     </html>

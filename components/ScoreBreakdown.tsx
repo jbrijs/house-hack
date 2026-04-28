@@ -8,21 +8,31 @@ export function ScoreBreakdown({ breakdown, total }: { breakdown: ScoreBreakdown
     { label: 'Risk', points: breakdown.risk.points, max: 10, detail: breakdown.risk.reasons.join(', ') || 'No signals' },
   ]
 
+  const pct = total / 100
+  const color = pct >= 0.75 ? 'text-emerald-600' : pct >= 0.5 ? 'text-amber-600' : 'text-muted-foreground'
+
   return (
-    <div className="space-y-3">
-      <div className="text-2xl font-bold">{total}<span className="text-sm font-normal text-gray-500">/100</span></div>
-      {bars.map((bar) => (
-        <div key={bar.label}>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-700 font-medium">{bar.label}</span>
-            <span className="text-gray-500">{bar.points}/{bar.max}</span>
+    <div className="space-y-4">
+      <div className={`text-3xl font-bold tabular-nums ${color}`}>
+        {total}
+        <span className="text-base font-normal text-muted-foreground">/100</span>
+      </div>
+      {bars.map((bar) => {
+        const barPct = (bar.points / bar.max) * 100
+        const barColor = barPct >= 75 ? 'bg-emerald-500' : barPct >= 50 ? 'bg-amber-400' : 'bg-slate-300'
+        return (
+          <div key={bar.label}>
+            <div className="flex justify-between text-sm mb-1.5">
+              <span className="font-medium">{bar.label}</span>
+              <span className="text-muted-foreground tabular-nums">{bar.points}<span className="text-xs">/{bar.max}</span></span>
+            </div>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${barPct}%` }} />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">{bar.detail}</p>
           </div>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(bar.points / bar.max) * 100}%` }} />
-          </div>
-          <p className="text-xs text-gray-400 mt-0.5">{bar.detail}</p>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

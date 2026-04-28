@@ -1,4 +1,8 @@
 'use client'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ScoreBadge } from './ScoreBadge'
 import type { ListingWithScore, InteractionStatus } from '@/lib/types'
 
 const COLUMNS: { status: InteractionStatus; label: string }[] = [
@@ -16,34 +20,44 @@ interface Props {
 
 export function PipelineBoard({ listings, onMove }: Props) {
   return (
-    <div className="grid grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
       {COLUMNS.map((col) => {
         const colListings = listings.filter((l) => l.user_interactions?.status === col.status)
         return (
-          <div key={col.status} className="bg-gray-100 rounded-lg p-3 min-h-[200px]">
-            <h3 className="font-semibold text-sm text-gray-700 mb-3">
-              {col.label} <span className="text-gray-400">({colListings.length})</span>
-            </h3>
+          <div key={col.status} className="min-h-[200px]">
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-semibold text-sm">{col.label}</h3>
+              <Badge variant="secondary" className="h-5 text-xs px-1.5">{colListings.length}</Badge>
+            </div>
             <div className="space-y-2">
               {colListings.map((l) => (
-                <div key={l.id} className="bg-white rounded border border-gray-200 p-3 text-xs">
-                  <p className="font-medium text-gray-900 mb-1">{l.address}</p>
-                  <p className="text-gray-500">${l.price?.toLocaleString()}</p>
-                  {l.listing_scores && (
-                    <p className="text-gray-500">Score: {l.listing_scores.score}/100</p>
-                  )}
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {COLUMNS.filter((c) => c.status !== col.status).map((c) => (
-                      <button
-                        key={c.status}
-                        onClick={() => onMove(l.id, c.status)}
-                        className="text-xs px-1.5 py-0.5 rounded border border-gray-200 text-gray-500 hover:border-gray-400"
-                      >
-                        → {c.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <Card key={l.id} className="shadow-none">
+                  <CardContent className="p-3 space-y-2">
+                    <p className="font-medium text-xs leading-snug">{l.address}</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-muted-foreground">${l.price?.toLocaleString()}</span>
+                      {l.listing_scores && (
+                        <ScoreBadge
+                          recommendation={l.listing_scores.recommendation as 'BUY' | 'WATCH' | 'PASS'}
+                          score={l.listing_scores.score}
+                        />
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {COLUMNS.filter((c) => c.status !== col.status).map((c) => (
+                        <Button
+                          key={c.status}
+                          variant="outline"
+                          size="sm"
+                          className="h-5 text-xs px-1.5 font-normal"
+                          onClick={() => onMove(l.id, c.status)}
+                        >
+                          → {c.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>

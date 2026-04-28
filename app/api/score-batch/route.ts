@@ -59,7 +59,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (candidatesError) {
     console.error('Unscored query error:', candidatesError)
-    return NextResponse.json({ error: String(candidatesError), scored: 0, remaining: total - scoredIds.length }, { status: 500 })
+    return NextResponse.json({ error: candidatesError, scored: 0, remaining: total - scoredIds.length }, { status: 500 })
   }
 
   const unscored = candidatesData ?? []

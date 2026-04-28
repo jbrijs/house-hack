@@ -19,16 +19,36 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const supabase = createServiceClient()
 
-  // Find listings with no score yet
-  const { data: unscored } = await supabase
+  // Get IDs that already have scores
+  const { data: scoredRows } = await supabase
+    .from('listing_scores')
+    .select('listing_id')
+
+  const scoredIds = (scoredRows ?? []).map(r => r.listing_id as string)
+
+  // Count total active listings
+  const { count: totalActive } = await supabase
+    .from('listings')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'active')
+
+  const total = totalActive ?? 0
+
+  // Find unscored listings
+  let query = supabase
     .from('listings')
     .select('id')
     .eq('status', 'active')
-    .not('id', 'in', supabase.from('listing_scores').select('listing_id'))
-    .limit(batchSize)
 
-  if (!unscored || unscored.length === 0) {
-    return NextResponse.json({ ok: true, scored: 0, remaining: 0 })
+  if (scoredIds.length > 0) {
+    query = query.not('id', 'in', `(${scoredIds.map(id => `'${id}'`).join(',')})`)
+  }
+
+  const { data: candidates } = await query.limit(batchSize)
+  const unscored = candidates ?? []
+
+  if (unscored.length === 0) {
+    return NextResponse.json({ ok: true, scored: 0, remaining: Math.max(0, total - scoredIds.length) })
   }
 
   let scored = 0
@@ -41,12 +61,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // Check how many still remain
-  const { count } = await supabase
-    .from('listings')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'active')
-    .not('id', 'in', supabase.from('listing_scores').select('listing_id'))
-
-  return NextResponse.json({ ok: true, scored, remaining: count ?? 0 })
+  const remaining = Math.max(0, total - scoredIds.length - scored)
+  return NextResponse.json({ ok: true, scored, remaining })
 }

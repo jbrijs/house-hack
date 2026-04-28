@@ -38,13 +38,17 @@ export async function extractFeatures(description: string): Promise<ExtractedFea
     temperature: 0,
   })
 
-  const raw = response.choices[0].message.content ?? '{}'
-  const parsed = JSON.parse(raw)
-  return {
-    hasBasementApt: Boolean(parsed.hasBasementApt),
-    hasAdu: Boolean(parsed.hasAdu),
-    separateEntrance: Boolean(parsed.separateEntrance),
-    parkingSpaces: Number(parsed.parkingSpaces) || 0,
-    layoutNotes: String(parsed.layoutNotes ?? ''),
+  const raw = response.choices[0]?.message?.content ?? '{}'
+  try {
+    const parsed = JSON.parse(raw)
+    return {
+      hasBasementApt: Boolean(parsed.hasBasementApt),
+      hasAdu: Boolean(parsed.hasAdu),
+      separateEntrance: Boolean(parsed.separateEntrance),
+      parkingSpaces: Number(parsed.parkingSpaces) || 0,
+      layoutNotes: String(parsed.layoutNotes ?? ''),
+    }
+  } catch {
+    return { hasBasementApt: false, hasAdu: false, separateEntrance: false, parkingSpaces: 0, layoutNotes: '' }
   }
 }

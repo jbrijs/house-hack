@@ -3,6 +3,7 @@ import type { ListingWithScore, InteractionStatus } from '@/lib/types'
 
 const COLUMNS: { status: InteractionStatus; label: string }[] = [
   { status: 'interested', label: 'Interested' },
+  { status: 'saved', label: 'Saved' },
   { status: 'toured', label: 'Toured' },
   { status: 'contacted', label: 'Contacted Agent' },
   { status: 'offer_made', label: 'Offer Made' },
@@ -15,7 +16,7 @@ interface Props {
 
 export function PipelineBoard({ listings, onMove }: Props) {
   return (
-    <div className="grid grid-cols-4 gap-4">
+    <div className="grid grid-cols-5 gap-4">
       {COLUMNS.map((col) => {
         const colListings = listings.filter((l) => l.user_interactions?.status === col.status)
         return (

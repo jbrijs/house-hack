@@ -64,7 +64,7 @@ function computeRisk(input: ScoreInput): { points: number; reasons: string[] } {
   else if (year >= 1980) { points += 3; reasons.push('Built 1980–1999') }
 
   const history = input.priceHistory ?? []
-  const reductions = history.filter((h, i) => i > 0 && h.price < history[i - 1].price).length
+  const reductions = history.filter((h, i) => i > 0 && h.price > history[i - 1].price).length
   if (reductions === 0) { points += 3; reasons.push('No price reductions') }
   else if (reductions === 1) { points += 1; reasons.push('1 price reduction') }
 

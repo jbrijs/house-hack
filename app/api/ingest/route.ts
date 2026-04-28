@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import { normalizeZillowListing, normalizeZillowRental } from '@/lib/pipeline/normalizer'
@@ -11,8 +12,13 @@ async function fetchApifyDataset(datasetId: string): Promise<Record<string, unkn
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const token = request.headers.get('x-ingest-token')
-  if (token !== process.env.INGEST_TOKEN) {
+  const token = request.headers.get('x-ingest-token') ?? ''
+  const expected = process.env.INGEST_TOKEN ?? ''
+  const tokenValid =
+    token.length === expected.length &&
+    expected.length > 0 &&
+    timingSafeEqual(Buffer.from(token, 'utf8'), Buffer.from(expected, 'utf8'))
+  if (!tokenValid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

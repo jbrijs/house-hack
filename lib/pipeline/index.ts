@@ -70,7 +70,7 @@ export async function runPipeline(listingId: string): Promise<void> {
   })
 
   // Upsert score
-  await supabase.from('listing_scores').upsert(
+  const { error: scoreError } = await supabase.from('listing_scores').upsert(
     {
       listing_id: listingId,
       score: scoreResult.score,
@@ -90,6 +90,10 @@ export async function runPipeline(listingId: string): Promise<void> {
     },
     { onConflict: 'listing_id' }
   )
+  if (scoreError) {
+    console.error(`Pipeline: failed to upsert score for ${listingId}`, scoreError)
+    return
+  }
 
   // Step 7: Alert for new BUY listings
   if (scoreResult.recommendation === 'BUY') {

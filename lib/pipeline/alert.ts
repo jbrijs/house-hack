@@ -19,7 +19,9 @@ interface AlertPayload {
 }
 
 export async function sendBuyAlert(listing: AlertPayload): Promise<void> {
-  const rentToPiti = Math.round((listing.rentEstimate / listing.pitiMonthlyFHA) * 100)
+  const rentToPiti = listing.pitiMonthlyFHA > 0
+    ? Math.round((listing.rentEstimate / listing.pitiMonthlyFHA) * 100)
+    : 0
   const monthlyOwnerCost = listing.pitiMonthlyFHA - listing.rentEstimate
 
   await getResend().emails.send({

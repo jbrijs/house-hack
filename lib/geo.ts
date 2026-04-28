@@ -27,7 +27,7 @@ const TRANSIT_STATIONS = [
   { name: 'Provo FrontRunner', lat: 40.2338, lng: -111.6585 },
   { name: 'Orem FrontRunner', lat: 40.2969, lng: -111.6978 },
   { name: 'American Fork FrontRunner', lat: 40.3777, lng: -111.7957 },
-  { name: 'Lehi FrontRunner', lat: 40.3916, lng: -111.8508 },
+  { name: 'Lehi FrontRunner', lat: 40.3892, lng: -111.8528 },
   { name: 'Sandy/Draper TRAX', lat: 40.5712, lng: -111.8899 },
   { name: 'Murray TRAX', lat: 40.6641, lng: -111.8879 },
   { name: 'Millcreek TRAX', lat: 40.6866, lng: -111.854 },

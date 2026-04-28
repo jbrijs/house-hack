@@ -2,13 +2,23 @@ import { timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase'
 import { normalizeZillowListing, normalizeZillowRental } from '@/lib/pipeline/normalizer'
-import { runPipeline } from '@/lib/pipeline'
 
 async function fetchApifyDataset(datasetId: string): Promise<Record<string, unknown>[]> {
-  const url = `https://api.apify.com/v2/datasets/${datasetId}/items?token=${process.env.APIFY_TOKEN}&limit=500`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Apify dataset fetch failed: ${res.status}`)
-  return res.json()
+  const all: Record<string, unknown>[] = []
+  const pageSize = 500
+  let offset = 0
+
+  while (true) {
+    const url = `https://api.apify.com/v2/datasets/${datasetId}/items?token=${process.env.APIFY_TOKEN}&limit=${pageSize}&offset=${offset}`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`Apify dataset fetch failed: ${res.status}`)
+    const page: Record<string, unknown>[] = await res.json()
+    all.push(...page)
+    if (page.length < pageSize) break
+    offset += pageSize
+  }
+
+  return all
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -32,7 +42,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const supabase = createServiceClient()
   let processed = 0
-  let scored = 0
 
   try {
     const items = await fetchApifyDataset(datasetId)
@@ -73,31 +82,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           .eq('source_id', normalized.source_id)
           .single()
 
-        const isNew = !existing
-        const priceChanged = existing && existing.price !== normalized.price
-
-        const { data: upserted } = await supabase
+        await supabase
           .from('listings')
           .upsert(
             {
               ...normalized,
               last_seen_at: new Date().toISOString(),
-              ...(isNew ? { first_seen_at: new Date().toISOString() } : {}),
+              ...(!existing ? { first_seen_at: new Date().toISOString() } : {}),
             },
             { onConflict: 'source,source_id' }
           )
-          .select('id')
-          .single()
-
-        if (upserted && (isNew || priceChanged)) {
-          await runPipeline(upserted.id)
-          scored++
-        }
         processed++
       }
     }
 
-    return NextResponse.json({ ok: true, processed, scored })
+    return NextResponse.json({ ok: true, processed })
   } catch (err) {
     console.error('Ingest error:', err)
     return NextResponse.json({ error: 'Ingest failed' }, { status: 500 })

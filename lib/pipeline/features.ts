@@ -28,7 +28,7 @@ export async function extractFeatures(description: string): Promise<ExtractedFea
   }
 
   const response = await getClient().chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-5.4-nano',
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },

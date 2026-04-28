@@ -1,9 +1,6 @@
--- Enable UUID extension
-create extension if not exists "uuid-ossp";
-
 -- listings: one row per property, upserted each scrape
 create table if not exists listings (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   source text not null,                    -- zillow / realtor
   source_id text not null,                 -- their listing ID
   url text,
@@ -35,7 +32,7 @@ create table if not exists listings (
 
 -- listing_scores: computed score per listing, one row per listing
 create table if not exists listing_scores (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   listing_id uuid not null references listings(id) on delete cascade,
   score integer not null default 0,
   cash_flow_score integer not null default 0,
@@ -56,7 +53,7 @@ create table if not exists listing_scores (
 
 -- rent_comps: active rental listings, keyed by zip+bedrooms, not tied to a specific for-sale listing
 create table if not exists rent_comps (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   source_id text not null,
   address text,
   zip text not null,
@@ -75,7 +72,7 @@ create table if not exists rent_comps (
 
 -- user_interactions: personal pipeline tracking
 create table if not exists user_interactions (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   listing_id uuid not null references listings(id) on delete cascade,
   status text not null,                    -- interested / saved / pass / contacted / toured / offer_made
   notes text,

@@ -88,6 +88,7 @@ User opens Next.js dashboard (Vercel)
 | has_basement_apt | boolean | extracted by LLM |
 | has_adu | boolean | extracted by LLM |
 | separate_entrance | boolean | extracted by LLM |
+| parking_spaces | integer | extracted by LLM |
 | description | text | raw listing description |
 | days_on_market | integer | |
 | price_history | jsonb | |
@@ -116,16 +117,24 @@ User opens Next.js dashboard (Vercel)
 | scored_at | timestamptz | |
 
 ### `rent_comps`
+Stores active rental listings scraped from Zillow Rentals. Queried by zip + bedrooms at scoring time — not tied to a specific for-sale listing, since one comp can be relevant to many listings.
+
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid | PK |
-| listing_id | uuid | FK → listings |
-| comp_address | text | |
-| comp_rent | integer | monthly |
-| comp_bedrooms | integer | |
-| comp_sqft | integer | |
+| source_id | text | rental listing ID from source |
+| address | text | |
+| zip | text | primary lookup key |
+| city | text | |
+| county | text | |
+| rent | integer | monthly |
+| bedrooms | integer | primary lookup key |
+| bathrooms | numeric | |
+| sqft | integer | |
 | source | text | zillow_rentals / craigslist |
-| pulled_at | timestamptz | |
+| first_seen_at | timestamptz | |
+| last_seen_at | timestamptz | |
+| is_active | boolean | false when no longer in scrape results |
 
 ### `user_interactions`
 | Column | Type | Notes |
@@ -162,7 +171,7 @@ Fails if ALL of the following are false:
 Failed listings get `passes_filter: false`, `score: 0`, `recommendation: PASS`. Stored but not shown in dashboard by default.
 
 ### Step 3 — Rent Estimation
-1. Pull active rental comps from `rent_comps` for same zip, pulled within 30 days, matching bedroom count ±1
+1. Pull active rental comps from `rent_comps` where `zip` matches, `is_active = true`, `last_seen_at` within 30 days, `bedrooms` within ±1 of listing
 2. If 3+ comps exist: median comp rent → `confidence: high`
 3. If 1-2 comps: average comp rent → `confidence: medium`
 4. If 0 comps: fall back to baseline model → `confidence: low`

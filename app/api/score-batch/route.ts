@@ -43,7 +43,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .from('listings')
       .select('id')
       .eq('status', 'active')
-      .not('id', 'in', `(${scoredIds.map(id => `'${id}'`).join(',')})`)
+      .not('id', 'in', `(${scoredIds.join(',')})`)
       .limit(batchSize)
     candidatesData = res.data as { id: string }[] | null
     candidatesError = res.error
